@@ -1,26 +1,58 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.schemas.resume import ResumeCreate, ResumeUpdate, ResumeResponse
+from app.services.resume_service import ResumeService
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
 
 @router.get("/")
-async def list_resumes():
-    pass
+async def list_resumes(db: AsyncSession = Depends(get_db)):
+    return []
 
 
 @router.post("/")
-async def create_resume():
-    pass
+async def create_resume(body: ResumeCreate, db: AsyncSession = Depends(get_db)):
+    service = ResumeService(db)
+    resume = await service.create_from_template(
+        title=body.title,
+        template_id=body.template_id,
+        user_id="",
+    )
+    return resume
 
 
 @router.get("/{resume_id}")
-async def get_resume(resume_id: str):
-    pass
+async def get_resume(resume_id: str, db: AsyncSession = Depends(get_db)):
+    service = ResumeService(db)
+    resume = await service.get_by_id(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    return resume
 
 
 @router.patch("/{resume_id}")
-async def update_resume(resume_id: str):
-    pass
+async def update_resume(resume_id: str, body: ResumeUpdate, db: AsyncSession = Depends(get_db)):
+    service = ResumeService(db)
+    resume = await service.get_by_id(resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    if body.content is not None and resume.template_version:
+        template_def = resume.template_version.get("definition")
+        if template_def:
+            result = service.validate_content_against_template(body.content, template_def)
+            if not result.is_valid:
+                raise HTTPException(status_code=422, detail={
+                    "message": "Resume content validation failed",
+                    "errors": result.errors,
+                    "warnings": result.warnings,
+                })
+
+    updated = await service.update_content(resume_id, body.content or resume.content)
+    return updated
 
 
 @router.delete("/{resume_id}")
