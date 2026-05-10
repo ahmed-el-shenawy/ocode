@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "resume-content-schema.json",
+  "title": "Resume Content",
+  "description": "Schema for CraftCV resume content data (stored in resumes.content JSONB column)",
+  "type": "object",
+  "required": ["sections"],
+  "properties": {
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/ResumeSection"
+      }
+    }
+  },
+  "definitions": {
+    "ResumeSection": {
+      "type": "object",
+      "required": ["section_id", "type", "items"],
+      "properties": {
+        "section_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "maxLength": 64
+        },
+        "type": {
+          "type": "string",
+          "enum": ["header", "summary", "experience", "education", "projects", "skills", "certifications", "languages", "custom"]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    }
+  }
+}
