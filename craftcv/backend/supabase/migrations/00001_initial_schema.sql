@@ -4,10 +4,11 @@
 
 -- 1. EXTENSIONS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. TABLES
 
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     full_name TEXT,
     avatar_url TEXT,
@@ -15,44 +16,45 @@ CREATE TABLE public.profiles (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE public.templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS public.templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     description TEXT,
     thumbnail_url TEXT,
     is_public BOOLEAN NOT NULL DEFAULT FALSE,
-    definition JSONB NOT NULL DEFAULT '{}',
+    definition JSONB NOT NULL,
     default_styles JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE public.resumes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS public.resumes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     template_id UUID REFERENCES public.templates(id) ON DELETE SET NULL,
-    title TEXT NOT NULL,
-    content JSONB NOT NULL DEFAULT '{}',
+    title TEXT NOT NULL DEFAULT 'Untitled Resume',
+    content JSONB NOT NULL DEFAULT '{"sections": []}',
     styles JSONB NOT NULL DEFAULT '{}',
-    status TEXT NOT NULL DEFAULT 'draft',
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'complete')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE public.conversations (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS public.conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     resume_id UUID NOT NULL REFERENCES public.resumes(id) ON DELETE CASCADE,
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    mode TEXT NOT NULL DEFAULT 'guided',
+    progress JSONB NOT NULL DEFAULT '{}',
+    mode TEXT NOT NULL DEFAULT 'guided' CHECK (mode IN ('guided', 'free')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE public.messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE IF NOT EXISTS public.messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     conversation_id UUID NOT NULL REFERENCES public.conversations(id) ON DELETE CASCADE,
-    role TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
     content TEXT NOT NULL,
     metadata JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -60,21 +62,21 @@ CREATE TABLE public.messages (
 
 -- 3. INDEXES
 
-CREATE INDEX idx_templates_user_id ON public.templates(user_id);
-CREATE INDEX idx_templates_is_public ON public.templates(is_public);
-CREATE INDEX idx_templates_created_at ON public.templates(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_templates_user_id ON public.templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_templates_is_public ON public.templates(is_public);
+CREATE INDEX IF NOT EXISTS idx_templates_created_at ON public.templates(created_at DESC);
 
-CREATE INDEX idx_resumes_user_id ON public.resumes(user_id);
-CREATE INDEX idx_resumes_template_id ON public.resumes(template_id);
-CREATE INDEX idx_resumes_status ON public.resumes(status);
-CREATE INDEX idx_resumes_created_at ON public.resumes(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON public.resumes(user_id);
+CREATE INDEX IF NOT EXISTS idx_resumes_template_id ON public.resumes(template_id);
+CREATE INDEX IF NOT EXISTS idx_resumes_status ON public.resumes(status);
+CREATE INDEX IF NOT EXISTS idx_resumes_created_at ON public.resumes(created_at DESC);
 
-CREATE INDEX idx_conversations_resume_id ON public.conversations(resume_id);
-CREATE INDEX idx_conversations_user_id ON public.conversations(user_id);
-CREATE INDEX idx_conversations_created_at ON public.conversations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversations_resume_id ON public.conversations(resume_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON public.conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON public.conversations(created_at DESC);
 
-CREATE INDEX idx_messages_conversation_id ON public.messages(conversation_id);
-CREATE INDEX idx_messages_created_at ON public.messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON public.messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages(created_at);
 
 -- 4. UPDATED_AT TRIGGER FUNCTION
 
@@ -88,22 +90,22 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER set_profiles_updated_at
+CREATE OR REPLACE TRIGGER set_profiles_updated_at
     BEFORE UPDATE ON public.profiles
     FOR EACH ROW
     EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER set_templates_updated_at
+CREATE OR REPLACE TRIGGER set_templates_updated_at
     BEFORE UPDATE ON public.templates
     FOR EACH ROW
     EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER set_resumes_updated_at
+CREATE OR REPLACE TRIGGER set_resumes_updated_at
     BEFORE UPDATE ON public.resumes
     FOR EACH ROW
     EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER set_conversations_updated_at
+CREATE OR REPLACE TRIGGER set_conversations_updated_at
     BEFORE UPDATE ON public.conversations
     FOR EACH ROW
     EXECUTE FUNCTION public.set_updated_at();
