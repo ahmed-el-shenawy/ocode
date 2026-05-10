@@ -24,8 +24,8 @@
 
 **Purpose**: Project initialization and dependency setup
 
-- [ ] T001 Add `jsonschema` dependency to `craftcv/backend/pyproject.toml`
-- [ ] T002 [P] Place JSON Schema contract files as authoritative copies in `craftcv/backend/app/core/contracts/template-definition-schema.json` and `craftcv/backend/app/core/contracts/resume-content-schema.json`
+- [x] T001 Add `jsonschema` dependency to `craftcv/backend/pyproject.toml`
+- [x] T002 [P] Place JSON Schema contract files as authoritative copies in `craftcv/backend/app/core/contracts/template-definition-schema.json` and `craftcv/backend/app/core/contracts/resume-content-schema.json`
 
 ---
 
@@ -35,9 +35,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Create `ValidationResult` dataclass in `craftcv/backend/app/core/validation.py` with fields: `is_valid: bool`, `errors: list[str]`, `warnings: list[str]`
-- [ ] T004 Create `TemplateSchemaValidator` class in `craftcv/backend/app/core/validation.py` that loads `template-definition-schema.json` and validates JSON objects against it using `jsonschema` library
-- [ ] T005 Create `ResumeContentValidator` class in `craftcv/backend/app/core/validation.py` that loads `resume-content-schema.json` and validates JSON objects against it
+- [x] T003 Create `ValidationResult` dataclass in `craftcv/backend/app/core/validation.py` with fields: `is_valid: bool`, `errors: list[str]`, `warnings: list[str]`
+- [x] T004 Create `TemplateSchemaValidator` class in `craftcv/backend/app/core/validation.py` that loads `template-definition-schema.json` and validates JSON objects against it using `jsonschema` library
+- [x] T005 Create `ResumeContentValidator` class in `craftcv/backend/app/core/validation.py` that loads `resume-content-schema.json` and validates JSON objects against it
 
 **Checkpoint**: Foundation ready — both schema validators exist and can validate raw JSON objects
 
@@ -51,11 +51,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Update `TemplateDefinition` Pydantic model in `craftcv/backend/app/schemas/template.py` to enforce identifier constraints (section IDs: lowercase alphanumeric + hyphens, max 64 chars; labels: max 255 chars) and field type restrictions for custom sections
-- [ ] T007 [P] [US1] Add `validate_definition` method to `TemplateService` in `craftcv/backend/app/services/template_service.py` that runs the template definition through `TemplateSchemaValidator` and raises appropriate errors for violations
-- [ ] T008 [US1] Integrate `validate_definition` into the template create endpoint in `craftcv/backend/app/api/v1/templates.py` (POST and PUT)
-- [ ] T009 [US1] Handle edge cases in `TemplateService.validate_definition`: duplicate section IDs (reject), unknown section types (reject), constraint conflicts like `min_items > max_items` (reject), missing layout (reject with clear error)
-- [ ] T010 [US1] Handle edge cases in `TemplateService.validate_definition`: field type with invalid attributes (e.g., `options` on non-select fields, `min`/`max` on non-list/tags fields — reject with specific error messages per data-model.md)
+- [x] T006 [P] [US1] Update `TemplateDefinition` Pydantic model in `craftcv/backend/app/schemas/template.py` to enforce identifier constraints (section IDs: lowercase alphanumeric + hyphens, max 64 chars; labels: max 255 chars) and field type restrictions for custom sections
+- [x] T007 [P] [US1] Add `validate_definition` method to `TemplateService` in `craftcv/backend/app/services/template_service.py` that runs the template definition through `TemplateSchemaValidator` and raises appropriate errors for violations
+- [x] T008 [US1] Integrate `validate_definition` into the template create endpoint in `craftcv/backend/app/api/v1/templates.py` (POST and PUT)
+- [x] T009 [US1] Handle edge cases in `TemplateService.validate_definition`: duplicate section IDs (reject), unknown section types (reject), constraint conflicts like `min_items > max_items` (reject), missing layout (reject with clear error)
+- [x] T010 [US1] Handle edge cases in `TemplateService.validate_definition`: field type with invalid attributes (e.g., `options` on non-select fields, `min`/`max` on non-list/tags fields — reject with specific error messages per data-model.md)
 
 **Checkpoint**: At this point, User Story 1 should be fully functional — template definitions are validated against the JSON Schema contract
 
@@ -69,14 +69,14 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [P] [US2] Add `validate_content_against_template` method to `ResumeService` in `craftcv/backend/app/services/resume_service.py` that:
+- [x] T011 [P] [US2] Add `validate_content_against_template` method to `ResumeService` in `craftcv/backend/app/services/resume_service.py` that:
   - Loads the linked template's `definition` JSON
   - Runs the content through `ResumeContentValidator`
   - Checks each content section_id matches a section in the template definition
   - Validates each item's fields against the section's field definitions (required fields present, types match)
   - Issues warnings (not errors) for unknown fields not in the template definition
-- [ ] T012 [US2] Integrate content validation into the resume update endpoint in `craftcv/backend/app/api/v1/resumes.py` (PATCH `/{resume_id}`) — block update if validation fails, attach warnings to response
-- [ ] T013 [US2] Implement template version snapshot logic: when a template is updated, ensure existing resumes retain their original template version reference — add a `template_version` field (UUID or JSON snapshot) to the `Resume` model in `craftcv/backend/app/models/resume.py` and update service to capture it on resume creation
+- [x] T012 [US2] Integrate content validation into the resume update endpoint in `craftcv/backend/app/api/v1/resumes.py` (PATCH `/{resume_id}`) — block update if validation fails, attach warnings to response
+- [x] T013 [US2] Implement template version snapshot logic: when a template is updated, ensure existing resumes retain their original template version reference — add a `template_version` field (UUID or JSON snapshot) to the `Resume` model in `craftcv/backend/app/models/resume.py` and update service to capture it on resume creation
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work — template definitions validated on creation, resume content validated against linked template
 
@@ -90,12 +90,12 @@
 
 ### Implementation for User Story 3
 
-- [ ] T014 [P] [US3] Add `update_layout` method to `TemplateService` in `craftcv/backend/app/services/template_service.py` that:
+- [x] T014 [P] [US3] Add `update_layout` method to `TemplateService` in `craftcv/backend/app/services/template_service.py` that:
   - Accepts only layout-related fields (`columns`, `color_scheme`, `fonts`)
   - Validates hex color format for color_scheme values (`^#[0-9a-fA-F]{6}$`)
   - Validates column count (1-3)
   - Does NOT re-validate the full definition (layout-only change preserves existing section structure)
-- [ ] T015 [US3] Add layout-only PATCH endpoint or extend existing template update in `craftcv/backend/app/api/v1/templates.py` to support partial layout updates without requiring full definition re-validation
+- [x] T015 [US3] Add layout-only PATCH endpoint or extend existing template update in `craftcv/backend/app/api/v1/templates.py` to support partial layout updates without requiring full definition re-validation
 
 **Checkpoint**: Layout can be updated independently without triggering section structure validation
 
@@ -105,9 +105,9 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T016 [P] Add structured logging for all validation operations in `craftcv/backend/app/core/validation.py` — log each validation pass/fail with template ID, section IDs involved, and error/warning count
-- [ ] T017 Run `craftcv/backend/app/core/contracts/` schema files through a JSON Schema draft-07 validator to verify they are syntactically valid
-- [ ] T018 Run `quickstart.md` validation scenarios to verify all acceptance criteria pass
+- [x] T016 [P] Add structured logging for all validation operations in `craftcv/backend/app/core/validation.py` — log each validation pass/fail with template ID, section IDs involved, and error/warning count
+- [x] T017 Run `craftcv/backend/app/core/contracts/` schema files through a JSON Schema draft-07 validator to verify they are syntactically valid
+- [x] T018 Run `quickstart.md` validation scenarios to verify all acceptance criteria pass
 
 ---
 

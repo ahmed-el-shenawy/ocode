@@ -11,6 +11,7 @@ class Resume(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=False)
     template_id = Column(UUID(as_uuid=True), ForeignKey("templates.id"), nullable=True)
+    template_version = Column(JSONB, nullable=True)
     title = Column(String, nullable=False)
     content = Column(JSONB, default=dict)
     styles = Column(JSONB, default=dict)

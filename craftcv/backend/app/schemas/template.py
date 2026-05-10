@@ -1,24 +1,34 @@
 from datetime import datetime
-from pydantic import BaseModel
-from typing import Any
+from pydantic import BaseModel, Field
+from typing import Any, Optional
+
+from app.core.validation import TemplateSchemaValidator
 
 
 class TemplateField(BaseModel):
-    key: str
-    label: str
     type: str
+    label: str = Field(max_length=255)
     required: bool = False
+    max_length: int | None = None
+    min: int | None = None
+    max: int | None = None
+    options: list[str] | None = None
 
 
 class SectionDefinition(BaseModel):
-    key: str
-    label: str
-    fields: list[TemplateField]
+    id: str = Field(pattern=r"^[a-z0-9-]+$", max_length=64)
+    type: str
+    label: str = Field(max_length=255)
+    required: bool = False
+    min_items: int = 0
+    max_items: int | None = None
+    fields: dict[str, TemplateField]
 
 
 class LayoutDefinition(BaseModel):
     columns: int = 1
-    sections: list[str]
+    color_scheme: dict[str, str] | None = None
+    fonts: dict[str, str] | None = None
 
 
 class TemplateDefinition(BaseModel):
