@@ -115,11 +115,11 @@ A user opens an AI-assisted editing session for their resume. The conversation h
 
 ### Measurable Outcomes
 
-- **SC-001**: A new user registration results in a profile record created within 1 second
-- **SC-002**: A resume with full content can be retrieved within 500ms for any given user
-- **SC-003**: A conversation with 100 messages loads within 1 second
-- **SC-004**: Deleting a user account removes all associated data (resumes, conversations, messages) within 5 seconds
-- **SC-005**: Template queries for public templates return results in under 200ms regardless of total template count
+- **SC-001**: Users can access their account and see their profile information immediately after completing registration
+- **SC-002**: Users can load any of their saved resumes with all content and styling intact without noticeable delay
+- **SC-003**: Users can review their full chat conversation history including messages from earlier sessions
+- **SC-004**: Users can delete their account and all associated data is permanently removed in a single action
+- **SC-005**: Users can browse available resume templates and see results without noticeable waiting time
 
 ## Assumptions
 
