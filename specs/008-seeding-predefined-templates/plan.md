@@ -1,3 +1,98 @@
+# Implementation Plan: Seeding Predefined Templates
+
+**Branch**: `008-seeding-predefined-templates` | **Date**: 2026-05-11 | **Spec**: `specs/008-seeding-predefined-templates/plan.md`
+**Input**: Section 11 of PLAN.md — 3 predefined resume templates seeded as `is_public=True`, `user_id=NULL`.
+
+## Summary
+
+Create a standalone Python seed script at `backend/supabase/seed.py` that inserts exactly 3 predefined templates (Modern Clean, Executive, Creative) with full JSONB definitions conforming to PLAN.md Section 3 format. Templates are read-only system data — users can create resumes from them but cannot modify or delete. The script is idempotent via case-insensitive upsert by name.
+
+## Technical Context
+
+**Language/Version**: Python 3.12+
+**Primary Dependencies**: SQLAlchemy async, Supabase PostgreSQL (asyncpg), Pydantic v2
+**Storage**: PostgreSQL via Supabase (templates table with JSONB `definition` and `default_styles`)
+**Testing**: pytest + pytest-asyncio with test database
+**Target Platform**: Linux server (Docker) via seed script execution
+**Project Type**: Web application (backend seed script for FastAPI + Next.js monorepo)
+**Performance Goals**: N/A — seed runs once, <1s execution
+**Constraints**: Must use existing SQLAlchemy `Template` model and repository layer. Must NOT bypass Alembic-managed schema.
+**Scale/Scope**: 3 static templates, no user data involved
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+### GATE 1: Architecture & Strict Layering
+✅ **PASS** — Seed script will use the existing `TemplateRepository` and `Template` model directly. Follows Route → Service → Repository pattern. No business logic in data access layer.
+
+### GATE 2: Tech Stack & Code Conventions
+✅ **PASS** — Python 3.12, SQLAlchemy async, Pydantic v2, snake_case, type hints. All conventions already established.
+
+### GATE 3: Design Patterns
+✅ **PASS** — Uses existing `BaseRepository` and `TemplateRepository`. No new patterns needed for a script that calls existing repository methods.
+
+### GATE 4: AI Agent & Content Quality
+✅ **PASS (N/A)** — This feature does not modify the AI agent.
+
+### GATE 5: Testing & Quality Gates
+✅ **PASS** — Seed script testable via pytest with test database. Can verify 3 templates inserted, idempotent on re-run.
+
+### GATE: Security & Data
+✅ **PASS** — Seeded templates have `user_id=NULL` (system-owned). Read-only enforcement via application-level check (no public API to modify `user_id IS NULL` templates). RLS policies on templates table protect against unauthorized modification.
+
+### GATE: Development Workflow
+✅ **PASS** — Single feature on single branch, conventional commits.
+
+### GATE: Governance
+✅ **PASS** — No constitution amendments needed.
+
+**Result**: ALL GATES PASS — No violations found. Complexity Tracking not required.
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/008-seeding-predefined-templates/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Source Code (repository root)
+
+```text
+backend/
+├── supabase/
+│   └── seed.py                  # NEW: Seed script (this feature)
+├── app/
+│   ├── models/
+│   │   └── template.py          # EXISTING: Template model
+│   ├── repositories/
+│   │   └── template_repo.py     # EXISTING: Template repository
+│   ├── schemas/
+│   │   └── template.py          # EXISTING: Template Pydantic schemas
+│   └── api/
+│       └── v1/
+│           └── templates.py     # EXISTING: Template API routes (may need read-only guard)
+```
+
+**Structure Decision**: Single file addition (`backend/supabase/seed.py`) that imports from existing backend layers. No new directories or projects needed.
+
+## Complexity Tracking
+
+> **Not required** — Constitution Check passed with no violations.
+
+---
+
+## Feature Specification (reference)
+
+The sections below are from the clarified feature specification, referenced by the plan above.
+
 # Feature Specification: Seeding Predefined Templates
 
 **Feature Branch**: `008-seeding-predefined-templates`
