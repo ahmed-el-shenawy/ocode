@@ -1,0 +1,34 @@
+{
+  "title": "CraftCV Environment Variables",
+  "description": "Schema for the shared .env file at project root for local Docker Compose development",
+  "type": "object",
+  "required": [
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_KEY",
+    "SUPABASE_ANON_KEY",
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_API_URL"
+  ],
+  "properties": {
+    "APP_NAME": { "type": "string", "default": "CraftCV" },
+    "DEBUG": { "type": "string", "default": "true" },
+    "SUPABASE_URL": { "type": "string", "format": "uri" },
+    "SUPABASE_SERVICE_KEY": { "type": "string" },
+    "SUPABASE_ANON_KEY": { "type": "string" },
+    "DATABASE_URL": { "type": "string" },
+    "JWT_SECRET": { "type": "string" },
+    "JWT_ALGORITHM": { "type": "string", "default": "HS256" },
+    "OPENAI_API_KEY": { "type": "string" },
+    "ANTHROPIC_API_KEY": { "type": "string" },
+    "GEMINI_API_KEY": { "type": "string" },
+    "REDIS_URL": { "type": "string", "default": "redis://redis:6379/0" },
+    "STORAGE_BUCKET": { "type": "string", "default": "resumes" },
+    "PDF_STORAGE_PATH": { "type": "string", "default": "pdfs" },
+    "NEXT_PUBLIC_SUPABASE_URL": { "type": "string", "format": "uri" },
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": { "type": "string" },
+    "NEXT_PUBLIC_API_URL": { "type": "string", "format": "uri", "default": "http://localhost:8000/api/v1" }
+  }
+}
