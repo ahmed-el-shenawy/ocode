@@ -2,14 +2,20 @@ export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
-  createdAt: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
 }
 
 export interface Conversation {
   id: string;
-  resumeId: string;
-  userId: string;
-  mode: "guided" | "freeform";
-  createdAt: string;
-  updatedAt: string;
+  resume_id: string;
+  mode: "guided" | "free";
+  progress: Record<string, unknown>;
+}
+
+export interface SectionProgress {
+  sectionId: string;
+  label: string;
+  completed: boolean;
+  itemCount: number;
 }

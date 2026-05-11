@@ -1,19 +1,27 @@
 export interface TemplateField {
-  key: string;
+  type: "text" | "url" | "date" | "boolean" | "richtext" | "list" | "tags" | "select";
   label: string;
-  type: string;
   required?: boolean;
+  max_length?: number;
+  min?: number;
+  max?: number;
+  options?: string[];
 }
 
 export interface SectionDefinition {
-  key: string;
+  id: string;
+  type: string;
   label: string;
-  fields: TemplateField[];
+  required?: boolean;
+  min_items?: number;
+  max_items?: number;
+  fields: Record<string, TemplateField>;
 }
 
 export interface LayoutDefinition {
   columns: number;
-  sections: string[];
+  color_scheme: Record<string, string>;
+  fonts: Record<string, string>;
 }
 
 export interface TemplateDefinition {
@@ -25,10 +33,10 @@ export interface Template {
   id: string;
   name: string;
   description?: string;
-  thumbnailUrl?: string;
-  isPublic: boolean;
+  thumbnail_url?: string;
+  is_public: boolean;
   definition: TemplateDefinition;
-  defaultStyles: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  default_styles: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
 }

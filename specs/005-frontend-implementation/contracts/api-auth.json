@@ -1,0 +1,60 @@
+{
+  "contract": "Auth API",
+  "version": "1.0",
+  "base_path": "/api/v1/auth",
+  "notes": "Primary auth is handled via Supabase Auth client-side. These endpoints provide backend session verification and user profile sync.",
+  "endpoints": {
+    "signup": {
+      "method": "POST",
+      "path": "/signup",
+      "auth": false,
+      "request": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 6 }
+        },
+        "required": ["email", "password"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" }
+        }
+      }
+    },
+    "signin": {
+      "method": "POST",
+      "path": "/signin",
+      "auth": false,
+      "request": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        },
+        "required": ["email", "password"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "access_token": { "type": "string" }
+        }
+      }
+    },
+    "logout": {
+      "method": "POST",
+      "path": "/logout",
+      "auth": true,
+      "response": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

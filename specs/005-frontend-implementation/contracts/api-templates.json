@@ -1,0 +1,56 @@
+{
+  "contract": "Template API",
+  "version": "1.0",
+  "base_path": "/api/v1/templates",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/",
+      "auth": false,
+      "response": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/TemplateResponse" }
+      }
+    },
+    "get": {
+      "method": "GET",
+      "path": "/{template_id}",
+      "auth": false,
+      "response": { "$ref": "#/definitions/TemplateResponse" }
+    },
+    "create": {
+      "method": "POST",
+      "path": "/",
+      "auth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "definition": { "type": "object" },
+          "default_styles": { "type": "object" },
+          "is_public": { "type": "boolean", "default": false }
+        },
+        "required": ["name", "definition"]
+      },
+      "response": { "$ref": "#/definitions/TemplateResponse" }
+    }
+  },
+  "definitions": {
+    "TemplateResponse": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail_url": { "type": "string" },
+        "is_public": { "type": "boolean" },
+        "definition": { "type": "object" },
+        "default_styles": { "type": "object" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "definition", "is_public", "created_at", "updated_at"]
+    }
+  }
+}

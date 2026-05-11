@@ -1,0 +1,73 @@
+{
+  "contract": "Resume API",
+  "version": "1.0",
+  "base_path": "/api/v1/resumes",
+  "endpoints": {
+    "list": {
+      "method": "GET",
+      "path": "/",
+      "auth": true,
+      "response": {
+        "type": "array",
+        "items": { "$ref": "#/definitions/ResumeResponse" }
+      }
+    },
+    "create": {
+      "method": "POST",
+      "path": "/",
+      "auth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "template_id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "default": "Untitled Resume" }
+        },
+        "required": ["template_id"]
+      },
+      "response": { "$ref": "#/definitions/ResumeResponse" }
+    },
+    "get": {
+      "method": "GET",
+      "path": "/{resume_id}",
+      "auth": true,
+      "response": { "$ref": "#/definitions/ResumeResponse" }
+    },
+    "update": {
+      "method": "PATCH",
+      "path": "/{resume_id}",
+      "auth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "content": { "type": "object" },
+          "styles": { "type": "object" },
+          "status": { "type": "string", "enum": ["draft", "complete"] }
+        }
+      },
+      "response": { "$ref": "#/definitions/ResumeResponse" }
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/{resume_id}",
+      "auth": true,
+      "response": { "type": "object", "properties": { "message": { "type": "string" } } }
+    }
+  },
+  "definitions": {
+    "ResumeResponse": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "template_id": { "type": "string", "format": "uuid" },
+        "title": { "type": "string" },
+        "content": { "type": "object" },
+        "styles": { "type": "object" },
+        "status": { "type": "string", "enum": ["draft", "complete"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "content", "styles", "status", "created_at", "updated_at"]
+    }
+  }
+}
