@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MessageSquare } from "lucide-react";
+import { useCallback, useEffect, useRef } from "react";
+import { Check, MessageSquare, X } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { SectionProgress } from "./SectionProgress";
 import { QuickActions } from "./QuickActions";
@@ -9,6 +9,7 @@ import { ChatInput } from "./ChatInput";
 import { GuidedFlowIndicator } from "./GuidedFlowIndicator";
 import { useChat } from "@/hooks/useChat";
 import { useChatStore } from "@/stores/chat-store";
+import { useStudioStore } from "@/stores/studio-store";
 
 interface ChatPanelProps {
   resumeId: string;
@@ -17,6 +18,9 @@ interface ChatPanelProps {
 export function ChatPanel({ resumeId }: ChatPanelProps) {
   const { messages, mode, progress, isLoading, startConversation, sendMessage, switchMode } =
     useChat(resumeId);
+  const pendingPatch = useChatStore((s) => s.pendingPatch);
+  const setPendingPatch = useChatStore((s) => s.setPendingPatch);
+  const syncClient = useStudioStore((s) => s.syncClient);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,6 +30,17 @@ export function ChatPanel({ resumeId }: ChatPanelProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleApply = useCallback(() => {
+    if (pendingPatch && syncClient) {
+      syncClient.sendPatch(pendingPatch);
+      setPendingPatch(null);
+    }
+  }, [pendingPatch, syncClient, setPendingPatch]);
+
+  const handleDiscard = useCallback(() => {
+    setPendingPatch(null);
+  }, [setPendingPatch]);
 
   return (
     <div className="flex flex-col h-full">
@@ -43,6 +58,26 @@ export function ChatPanel({ resumeId }: ChatPanelProps) {
       </div>
 
       <SectionProgress progress={progress} />
+
+      {pendingPatch && (
+        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border-b border-blue-100">
+          <span className="text-xs text-blue-700 flex-1">AI suggested content changes</span>
+          <button
+            onClick={handleApply}
+            className="flex items-center gap-1 px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+          >
+            <Check className="w-3 h-3" />
+            Apply
+          </button>
+          <button
+            onClick={handleDiscard}
+            className="flex items-center gap-1 px-2 py-1 bg-white border rounded text-xs hover:bg-gray-50"
+          >
+            <X className="w-3 h-3" />
+            Discard
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg) => (

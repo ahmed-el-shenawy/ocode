@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { Message } from "@/types/chat";
+import type { ContentPatch } from "@/lib/sync/types";
 
 interface ChatStore {
   messages: Message[];
@@ -9,6 +10,7 @@ interface ChatStore {
   mode: "guided" | "free";
   progress: Record<string, unknown>;
   isLoading: boolean;
+  pendingPatch: ContentPatch | null;
 
   setConversation: (id: string, mode: "guided" | "free", progress: Record<string, unknown>) => void;
   addMessage: (message: Message) => void;
@@ -16,6 +18,7 @@ interface ChatStore {
   setMode: (mode: "guided" | "free") => void;
   setProgress: (progress: Record<string, unknown>) => void;
   setLoading: (loading: boolean) => void;
+  setPendingPatch: (patch: ContentPatch | null) => void;
   reset: () => void;
 }
 
@@ -25,6 +28,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   mode: "guided",
   progress: {},
   isLoading: false,
+  pendingPatch: null,
 
   setConversation: (id, mode, progress) =>
     set({ conversationId: id, mode, progress }),
@@ -40,6 +44,8 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
+  setPendingPatch: (pendingPatch) => set({ pendingPatch }),
+
   reset: () =>
     set({
       messages: [],
@@ -47,5 +53,6 @@ export const useChatStore = create<ChatStore>((set) => ({
       mode: "guided",
       progress: {},
       isLoading: false,
+      pendingPatch: null,
     }),
 }));

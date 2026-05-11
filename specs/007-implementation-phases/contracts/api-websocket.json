@@ -1,0 +1,110 @@
+{
+  "contract": "WebSocket Sync Protocol",
+  "version": "1.0.0",
+  "description": "WebSocket endpoint for real-time resume content synchronization between studio and chat",
+  "endpoint": {
+    "url": "ws://host/api/v1/studio/{resume_id}/sync",
+    "method": "WebSocket",
+    "auth": "JWT token sent as first message after connection",
+    "auth_message": {
+      "type": "auth",
+      "token": "<supabase_jwt>"
+    }
+  },
+  "messages": {
+    "client_to_server": [
+      {
+        "type": "auth",
+        "description": "Authentication, must be first message",
+        "payload": {
+          "token": { "type": "string", "required": true }
+        }
+      },
+      {
+        "type": "patch",
+        "description": "Send a content patch from chat or studio",
+        "payload": {
+          "patchId": { "type": "string (UUID)", "required": true },
+          "sectionId": { "type": "string (UUID)", "required": true },
+          "fields": { "type": "Record<string, any>", "required": true },
+          "source": { "type": "enum", "values": ["chat", "studio"], "required": true },
+          "timestamp": { "type": "string (ISO 8601)", "required": true }
+        }
+      },
+      {
+        "type": "ping",
+        "description": "Heartbeat to keep connection alive",
+        "payload": {}
+      }
+    ],
+    "server_to_client": [
+      {
+        "type": "auth_ok",
+        "description": "Authentication successful",
+        "payload": { "resumeId": "string" }
+      },
+      {
+        "type": "auth_error",
+        "description": "Authentication failed",
+        "payload": { "error": "string" }
+      },
+      {
+        "type": "patch_ack",
+        "description": "Server accepted the patch",
+        "payload": {
+          "patchId": { "type": "string (UUID)", "required": true },
+          "status": { "type": "enum", "values": ["applied", "conflict"] },
+          "currentState": { "type": "object", "required_if": "status === 'conflict'" },
+          "conflictSectionId": { "type": "string", "required_if": "status === 'conflict'" }
+        }
+      },
+      {
+        "type": "patch_broadcast",
+        "description": "Patch applied by another connection (or chat service)",
+        "payload": {
+          "sectionId": "string (UUID)",
+          "fields": "Record<string, any>",
+          "source": "enum (chat | studio)",
+          "timestamp": "string (ISO 8601)"
+        }
+      },
+      {
+        "type": "state_sync",
+        "description": "Full resume state snapshot (sent on connect and on request)",
+        "payload": {
+          "sections": "Record<string, any>",
+          "updatedAt": "string (ISO 8601)"
+        }
+      },
+      {
+        "type": "error",
+        "description": "Server error",
+        "payload": { "code": "string", "message": "string" }
+      },
+      {
+        "type": "pong",
+        "description": "Heartbeat response",
+        "payload": {}
+      }
+    ]
+  },
+  "error_codes": {
+    "AUTH_FAILED": "Invalid or expired JWT",
+    "RESUME_NOT_FOUND": "Resume ID does not exist",
+    "PATCH_INVALID": "Malformed patch payload",
+    "CONFLICT": "Section was modified by another source",
+    "RATE_LIMITED": "Too many patches per second"
+  },
+  "rate_limiting": {
+    "max_patches_per_second": 10,
+    "response_on_exceed": { "type": "error", "code": "RATE_LIMITED" }
+  },
+  "fallback": {
+    "polling_endpoint": "GET /api/v1/studio/{resume_id}/state",
+    "polling_interval_seconds": 3,
+    "polling_response": {
+      "sections": "Record<string, any>",
+      "updatedAt": "string (ISO 8601)"
+    }
+  }
+}
