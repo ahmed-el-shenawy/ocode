@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.template import TemplateCreate, TemplateResponse
+from app.core.dependencies import get_current_user
+from app.schemas.template import TemplateCreate
 from app.services.template_service import TemplateService, ValidationError
 
 router = APIRouter(prefix="/templates", tags=["templates"])
@@ -15,10 +16,19 @@ class LayoutUpdate(BaseModel):
     fonts: dict[str, str] | None = None
 
 
-@router.get("/")
-async def list_templates(db: AsyncSession = Depends(get_db)):
+@router.get("/public")
+async def list_public_templates(db: AsyncSession = Depends(get_db)):
     service = TemplateService(db)
     return await service.get_public_templates()
+
+
+@router.get("/")
+async def list_user_templates(
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user),
+):
+    service = TemplateService(db)
+    return await service.get_user_templates(user_id)
 
 
 @router.get("/{template_id}")
@@ -26,7 +36,7 @@ async def get_template(template_id: str, db: AsyncSession = Depends(get_db)):
     service = TemplateService(db)
     template = await service.get_by_id(template_id)
     if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
     return template
 
 
@@ -37,7 +47,7 @@ async def update_template_layout(
     service = TemplateService(db)
     template = await service.get_by_id(template_id)
     if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
     layout = {}
     if body.columns is not None:
         layout["columns"] = body.columns
@@ -52,8 +62,12 @@ async def update_template_layout(
     return {"status": "ok", "definition": updated_def}
 
 
-@router.post("/")
-async def create_template(body: TemplateCreate, db: AsyncSession = Depends(get_db)):
+@router.post("/", status_code=201)
+async def create_template(
+    body: TemplateCreate,
+    db: AsyncSession = Depends(get_db),
+    user_id: str = Depends(get_current_user),
+):
     service = TemplateService(db)
     result = service.validate_definition(body.definition)
     if not result.is_valid:
@@ -62,4 +76,12 @@ async def create_template(body: TemplateCreate, db: AsyncSession = Depends(get_d
             "errors": result.errors,
             "warnings": result.warnings,
         })
-    return {"status": "ok", "message": "Template validated successfully"}
+    template = await service.create(
+        name=body.name,
+        definition=body.definition,
+        user_id=user_id,
+        description=body.description,
+        default_styles=body.default_styles,
+        is_public=body.is_public,
+    )
+    return template

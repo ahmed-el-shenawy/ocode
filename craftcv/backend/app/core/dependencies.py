@@ -1,11 +1,12 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
-from supabase import Client
+
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.supabase import get_supabase_anon
-from jose import jwt, JWTError
-from app.core.config import settings
+from supabase import Client
 
 bearer = HTTPBearer()
 

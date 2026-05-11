@@ -1,5 +1,6 @@
-from typing import Generic, TypeVar, Any
-from sqlalchemy import select, func
+from typing import Any, Generic, TypeVar
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 T = TypeVar("T")

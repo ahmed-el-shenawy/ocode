@@ -1,0 +1,23 @@
+# PDF API
+
+Base path: `/api/v1/resumes`
+
+All endpoints require `Authorization: Bearer <token>`.
+
+## GET /{resume_id}/pdf
+
+Generate and download a PDF for the given resume.
+
+**Success Response (200):**
+- Content-Type: `application/pdf`
+- Body: Raw PDF binary stream
+
+**Error Responses:**
+- `404` — Resume not found
+- `500` — PDF generation failed (rendering error)
+- `503` — Playwright/Chromium unavailable
+
+**Notes:**
+- PDF is generated on-demand per download request (no caching)
+- Resume is rendered to HTML first using the template's layout and styles, then Playwright converts to PDF
+- Generation timeout: 30 seconds for up to 5 sections

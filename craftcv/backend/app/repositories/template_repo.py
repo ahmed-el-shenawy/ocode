@@ -1,7 +1,8 @@
-from sqlalchemy import select, or_
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.base import BaseRepository
+
 from app.models.template import Template
+from app.repositories.base import BaseRepository
 
 
 class TemplateRepository(BaseRepository[Template]):

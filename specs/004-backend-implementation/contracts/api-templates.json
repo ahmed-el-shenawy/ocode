@@ -1,0 +1,62 @@
+# Templates API
+
+Base path: `/api/v1/templates`
+
+Endpoints requiring authentication are marked with 🔒.
+
+## GET /public
+
+List all public templates (no auth required).
+
+**Success Response (200):**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "Classic",
+    "description": "A clean traditional layout",
+    "thumbnail_url": "https://...",
+    "is_public": true,
+    "definition": {"sections": [...], "layout": {...}},
+    "default_styles": {},
+    "created_at": "2026-01-01T00:00:00Z"
+  }
+]
+```
+
+---
+
+## POST / 🔒
+
+Create a custom template (clone of public + customized).
+
+**Request Body:**
+```json
+{
+  "name": "My Custom Template",
+  "description": "Based on Classic with blue accents",
+  "definition": {"sections": [...], "layout": {...}},
+  "default_styles": {"primary": "#0000ff"},
+  "is_public": false
+}
+```
+
+**Success Response (201):** Template object
+
+---
+
+## GET / 🔒
+
+List authenticated user's custom templates.
+
+**Success Response (200):** Array of template objects
+
+---
+
+## GET /{template_id}
+
+Get templates available to the user (public + own custom).
+
+**Success Response (200):** Array of template objects
+
+**Note:** `user_id` is null for public system templates, set to the owner's ID for custom templates.

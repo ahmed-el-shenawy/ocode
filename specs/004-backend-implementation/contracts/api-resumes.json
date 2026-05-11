@@ -1,0 +1,97 @@
+# Resumes API
+
+Base path: `/api/v1/resumes`
+
+All endpoints require `Authorization: Bearer <token>`.
+
+## GET /
+
+List all resumes for the authenticated user.
+
+**Success Response (200):**
+```json
+[
+  {
+    "id": "uuid",
+    "template_id": "uuid",
+    "title": "My Resume",
+    "content": {"sections": []},
+    "styles": {},
+    "status": "draft",
+    "created_at": "2026-01-01T00:00:00Z",
+    "updated_at": "2026-01-01T00:00:00Z"
+  }
+]
+```
+
+---
+
+## POST /
+
+Create a new resume from a template.
+
+**Request Body:**
+```json
+{
+  "template_id": "uuid",
+  "title": "My Resume"
+}
+```
+
+**Success Response (201):** Same as GET / item
+
+**Error Responses:**
+- `404` — Template not found
+- `422` — Invalid request body
+
+---
+
+## GET /{resume_id}
+
+Get a single resume by ID.
+
+**Success Response (200):** Same as GET / item
+
+**Error Responses:**
+- `404` — Resume not found
+- `403` — Not owner
+
+---
+
+## PATCH /{resume_id}
+
+Update resume fields. Requires `If-Unmodified-Since` or `updated_at` in body for optimistic locking.
+
+**Request Body:**
+```json
+{
+  "title": "Updated Title",
+  "content": {"sections": [...]},
+  "styles": {"primary": "#ff0000"},
+  "status": "complete"
+}
+```
+
+**Success Response (200):** Updated resume object
+
+**Error Responses:**
+- `404` — Resume not found
+- `409` — Conflict (stale `updated_at` — client must re-fetch)
+- `422` — Invalid content structure
+
+---
+
+## DELETE /{resume_id}
+
+Delete a resume.
+
+**Success Response (200):**
+```json
+{
+  "message": "Resume deleted"
+}
+```
+
+**Error Responses:**
+- `404` — Resume not found
+- `403` — Not owner

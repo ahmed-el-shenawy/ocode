@@ -1,8 +1,10 @@
 import re
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.repositories.template_repo import TemplateRepository
+
 from app.core.validation import TemplateSchemaValidator, ValidationResult
+from app.models.template import Template
+from app.repositories.template_repo import TemplateRepository
 
 _HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -41,7 +43,29 @@ class TemplateService:
         return await self.repo.get_available_for_user(user_id)
 
     async def create_from_template(self, template_id: str, user_id: str):
-        return await self.repo.get_by_id(template_id)
+        source = await self.repo.get_by_id(template_id)
+        if not source:
+            return None
+        clone = Template(
+            user_id=user_id,
+            name=source.name,
+            description=source.description,
+            is_public=False,
+            definition=source.definition,
+            default_styles=source.default_styles,
+        )
+        return await self.repo.create(clone)
+
+    async def create(self, name: str, definition: dict, user_id: str, description: str | None = None, default_styles: dict | None = None, is_public: bool = False):
+        template = Template(
+            user_id=user_id,
+            name=name,
+            description=description,
+            definition=definition,
+            default_styles=default_styles or {},
+            is_public=is_public,
+        )
+        return await self.repo.create(template)
 
     def validate_definition(self, definition: dict) -> ValidationResult:
         result = self.schema_validator.validate(definition)
