@@ -68,6 +68,14 @@ async def track_metrics(request: Request, call_next):
 
 app.add_api_route("/metrics", _metrics_endpoint, include_in_schema=False)
 
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
+
+
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
 app.include_router(resumes.router, prefix="/api/v1")
