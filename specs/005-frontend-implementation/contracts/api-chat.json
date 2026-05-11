@@ -1,0 +1,79 @@
+{
+  "contract": "Chat API",
+  "version": "1.0",
+  "base_path": "/api/v1/chat",
+  "endpoints": {
+    "start_conversation": {
+      "method": "POST",
+      "path": "/conversation/{resume_id}",
+      "auth": true,
+      "response": {
+        "type": "object",
+        "properties": {
+          "conversation_id": { "type": "string", "format": "uuid" },
+          "mode": { "type": "string", "enum": ["guided", "free"] },
+          "progress": { "type": "object" }
+        },
+        "required": ["conversation_id", "mode", "progress"]
+      }
+    },
+    "send_message": {
+      "method": "POST",
+      "path": "/message/{conversation_id}",
+      "auth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" }
+        },
+        "required": ["content"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "content": { "type": "string" },
+          "role": { "type": "string", "enum": ["assistant"] }
+        },
+        "required": ["content", "role"]
+      }
+    },
+    "switch_mode": {
+      "method": "POST",
+      "path": "/switch-mode/{conversation_id}",
+      "auth": true,
+      "request": {
+        "type": "object",
+        "properties": {
+          "mode": { "type": "string", "enum": ["guided", "free"] }
+        },
+        "required": ["mode"]
+      },
+      "response": {
+        "type": "object",
+        "properties": {
+          "mode": { "type": "string", "enum": ["guided", "free"] }
+        },
+        "required": ["mode"]
+      }
+    },
+    "get_messages": {
+      "method": "GET",
+      "path": "/messages/{conversation_id}",
+      "auth": true,
+      "response": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string", "format": "uuid" },
+            "role": { "type": "string", "enum": ["user", "assistant", "system"] },
+            "content": { "type": "string" },
+            "metadata": { "type": "object" },
+            "created_at": { "type": "string", "format": "date-time" }
+          },
+          "required": ["id", "role", "content", "created_at"]
+        }
+      }
+    }
+  }
+}

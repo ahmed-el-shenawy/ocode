@@ -1,0 +1,28 @@
+{
+  "contract": "PDF API",
+  "version": "1.0",
+  "base_path": "/api/v1/pdf",
+  "endpoints": {
+    "generate": {
+      "method": "POST",
+      "path": "/generate/{resume_id}",
+      "auth": true,
+      "response": {
+        "type": "object",
+        "properties": {
+          "pdf_url": { "type": "string" },
+          "message": { "type": "string" }
+        }
+      }
+    },
+    "download": {
+      "method": "GET",
+      "path": "/download/{resume_id}",
+      "auth": true,
+      "response": {
+        "type": "binary",
+        "content_type": "application/pdf"
+      }
+    }
+  }
+}

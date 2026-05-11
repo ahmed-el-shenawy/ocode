@@ -1,7 +1,7 @@
 export interface SectionItemData {
-  id: string;
+  section_id: string;
   type: string;
-  content: unknown;
+  items: Record<string, unknown>[];
 }
 
 export interface ResumeContent {
@@ -10,12 +10,32 @@ export interface ResumeContent {
 
 export interface Resume {
   id: string;
-  userId: string;
-  templateId?: string;
+  template_id?: string;
   title: string;
   content: ResumeContent;
   styles: Record<string, unknown>;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
+  status: "draft" | "complete";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WidgetPosition {
+  x: number;
+  y: number;
+}
+
+export interface WidgetState {
+  id: string;
+  sectionId: string;
+  type: string;
+  items: Record<string, unknown>[];
+  position: WidgetPosition;
+  width: number;
+  styles: Record<string, unknown>;
+}
+
+export interface StudioState {
+  widgets: WidgetState[];
+  selectedWidgetId: string | null;
+  globalStyles: Record<string, unknown>;
 }

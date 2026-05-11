@@ -5,7 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CraftCV",
+  title: "CraftCV - Resume Builder",
+  description: "Create professional CVs and resumes with AI assistance",
 };
 
 export default function RootLayout({

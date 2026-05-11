@@ -1,3 +1,5 @@
+"use client";
+
 export function WidgetToolbar() {
-  return <div>WidgetToolbar — under construction</div>;
+  return null;
 }
