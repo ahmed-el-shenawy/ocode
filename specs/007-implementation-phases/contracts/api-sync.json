@@ -1,0 +1,52 @@
+{
+  "contract": "Content Sync REST API",
+  "version": "1.0.0",
+  "description": "REST endpoints for polling fallback and sync status",
+  "endpoints": [
+    {
+      "path": "GET /api/v1/studio/{resume_id}/state",
+      "auth": "JWT required",
+      "description": "Get current resume state for polling fallback",
+      "response_200": {
+        "sections": "Record<string, SectionState>",
+        "updatedAt": "string (ISO 8601)"
+      },
+      "response_404": {
+        "error": "Resume not found"
+      }
+    },
+    {
+      "path": "POST /api/v1/studio/{resume_id}/patch",
+      "auth": "JWT required",
+      "description": "Send a content patch via REST (fallback when WebSocket unavailable)",
+      "request_body": {
+        "patchId": "string (UUID)",
+        "sectionId": "string (UUID)",
+        "fields": "Record<string, any>",
+        "source": "enum (chat | studio)",
+        "timestamp": "string (ISO 8601)"
+      },
+      "response_200": {
+        "status": "applied"
+      },
+      "response_409": {
+        "status": "conflict",
+        "currentState": "object",
+        "conflictSectionId": "string (UUID)"
+      }
+    },
+    {
+      "path": "GET /api/v1/metrics/sync",
+      "auth": "JWT required (admin only)",
+      "description": "Expose sync system metrics for observability (FR-011)",
+      "response_200": {
+        "patchesSent": "number",
+        "patchesReceived": "number",
+        "conflicts": "number",
+        "errors": "number",
+        "activeConnections": "number",
+        "uptimeSeconds": "number"
+      }
+    }
+  ]
+}

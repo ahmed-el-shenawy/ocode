@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
+from app.schemas.sync import ContentPatch
+from app.services.sync_service import SyncService
 from app.services.studio_service import StudioService
 
 router = APIRouter(prefix="/studio", tags=["studio"])
+sync_service = SyncService()
 
 
 class SectionUpdate(BaseModel):
@@ -40,3 +43,26 @@ async def list_sections(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
     content = resume.content or {}
     return content.get("sections", [])
+
+
+@router.websocket("/ws/{resume_id}/sync")
+async def sync_websocket(websocket: WebSocket, resume_id: str):
+    await sync_service.handle_websocket(websocket, resume_id)
+
+
+@router.get("/sync/{resume_id}/state")
+async def get_sync_state(resume_id: str):
+    return sync_service.get_state(resume_id)
+
+
+@router.post("/sync/{resume_id}/patch")
+async def post_sync_patch(resume_id: str, patch: ContentPatch):
+    result = await sync_service.apply_patch_rest(resume_id, patch.model_dump())
+    if result.get("status") == "conflict":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=result)
+    return result
+
+
+@router.get("/sync/metrics")
+async def get_sync_metrics():
+    return sync_service.get_metrics()

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   DndContext,
   closestCenter,
@@ -13,13 +13,62 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { AlertTriangle } from "lucide-react";
 import { Widget } from "./Widget";
 import { SectionPicker } from "./SectionPicker";
 import { useStudioStore } from "@/stores/studio-store";
+import { WebSocketClient } from "@/lib/sync/websocket-client";
+import type { SyncEvent } from "@/lib/sync/types";
 
-export function Canvas() {
-  const { widgets, reorderWidgets, selectWidget, selectedWidgetId } =
-    useStudioStore();
+interface CanvasProps {
+  resumeId: string;
+}
+
+export function Canvas({ resumeId }: CanvasProps) {
+  const {
+    widgets,
+    reorderWidgets,
+    selectWidget,
+    selectedWidgetId,
+    syncState,
+    setConnectionStatus,
+    applyPatch,
+    setConflictSection,
+    setSyncClient,
+  } = useStudioStore();
+
+  const clientRef = useRef<WebSocketClient | null>(null);
+
+  useEffect(() => {
+    const handleMessage = (event: SyncEvent) => {
+      if (event.type === "patch_broadcast") {
+        const payload = event.payload as {
+          sectionId: string;
+          fields: Record<string, unknown>;
+        };
+        applyPatch(payload.sectionId, payload.fields);
+      } else if (event.type === "state_sync") {
+        const payload = event.payload as {
+          sections: Array<{ id: string; fields: Record<string, unknown> }>;
+        };
+        payload.sections.forEach((section) => {
+          applyPatch(section.id, section.fields);
+        });
+      }
+    };
+
+    const handleStatusChange = setConnectionStatus;
+
+    const client = new WebSocketClient(resumeId, handleMessage, handleStatusChange);
+    clientRef.current = client;
+    setSyncClient(client);
+    client.connect();
+
+    return () => {
+      client.destroy();
+      setSyncClient(null);
+    };
+  }, [resumeId]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -45,6 +94,21 @@ export function Canvas() {
         className="mx-auto bg-white shadow-lg min-h-[1056px] w-[816px] relative p-12"
         onClick={() => selectWidget(null)}
       >
+        {syncState.conflictSectionId && (
+          <div className="mb-4 flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 text-sm text-yellow-800">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+            <span>
+              Conflict detected in section.{" "}
+              <button
+                onClick={() => setConflictSection(null)}
+                className="underline font-medium hover:text-yellow-900"
+              >
+                Dismiss
+              </button>
+            </span>
+          </div>
+        )}
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -57,7 +121,15 @@ export function Canvas() {
             {widgets.map((widget) => (
               <Widget
                 key={widget.id}
-                widget={widget}
+                widget={{
+                  ...widget,
+                  styles: {
+                    ...widget.styles,
+                    ...(syncState.conflictSectionId === widget.sectionId
+                      ? { borderColor: "#eab308" }
+                      : {}),
+                  },
+                }}
                 isSelected={selectedWidgetId === widget.id}
               />
             ))}
