@@ -62,19 +62,20 @@ The seed operation can be run multiple times without creating duplicate template
 
 ### Functional Requirements
 
-- **FR-001**: System MUST provide a seed script (Alembic migration or standalone Python script) that inserts exactly 3 predefined templates.
+- **FR-001**: System MUST provide a standalone Python seed script at `backend/supabase/seed.py` that inserts exactly 3 predefined templates.
 - **FR-002**: The "Modern Clean" template MUST define a single-column layout, blue accent color (`#2563eb`), Inter font, and sections: header, summary, experience, education, skills, projects, certifications, languages.
 - **FR-003**: The "Executive" template MUST define a dark header color scheme (`#1e293b` primary, `#334155` secondary), serif fonts (Merriweather headings, Georgia body), and sections: header, summary, experience, education, certifications, skills.
 - **FR-004**: The "Creative" template MUST define a two-column layout, colorful accent palette (`#7c3aed` primary, `#ec4899` accent), and sections: header, summary, experience, education, skills (sidebar), projects, certifications.
 - **FR-005**: All seeded templates MUST have `is_public=True` and `user_id=NULL`.
-- **FR-006**: The seed script MUST be idempotent (safe to run multiple times using upsert by name).
+- **FR-006**: The seed script MUST be idempotent (safe to run multiple times using upsert by name, with case-insensitive matching).
 - **FR-007**: Each template's `definition` MUST include valid `sections` array and `layout` object conforming to the template JSON format defined in PLAN.md Section 3.
 - **FR-008**: Each template's `default_styles` MUST include sensible defaults for margins, spacing, and section ordering.
+- **FR-009**: Seeded templates MUST be read-only system data — authenticated users MUST NOT be able to modify or delete templates where `user_id IS NULL` and `is_public = true`.
 
 ### Key Entities
 
 - **Template**: A predefined resume layout with JSONB `definition` (sections + layout) and `default_styles`. Seeded as system-owned (`user_id=NULL`, `is_public=True`).
-- **Seed Script**: An Alembic migration or standalone script at `backend/supabase/seed.sql` or `backend/alembic/versions/XXXX_seed_templates.py`.
+- **Seed Script**: A standalone Python script at `backend/supabase/seed.py`.
 
 ## Success Criteria
 
@@ -84,6 +85,14 @@ The seed operation can be run multiple times without creating duplicate template
 - **SC-002**: Each template's definition JSON is valid against the schema (all required fields present, layout sections match the PLAN.md Section 3 format).
 - **SC-003**: Running the seed script multiple times does not create duplicate template entries.
 - **SC-004**: A new user can create a resume from any of the 3 templates without additional configuration.
+
+## Clarifications
+
+### Session 2026-05-11
+
+- Q: FR-001 — Which seed mechanism (Alembic migration vs standalone Python script vs raw SQL)? → A: Standalone Python script at `backend/supabase/seed.py`
+- Q: Can authenticated users modify or delete seeded public templates? → A: No — seeded templates are read-only system data. Users create resumes from them but cannot edit/delete the template definitions themselves.
+- Q: How should upsert match template names for idempotency? → A: Case-insensitive name matching (e.g., 'modern clean' matches 'Modern Clean').
 
 ## Assumptions
 
