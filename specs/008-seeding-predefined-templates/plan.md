@@ -1,0 +1,198 @@
+# Implementation Plan: Seeding Predefined Templates
+
+**Branch**: `008-seeding-predefined-templates` | **Date**: 2026-05-11 | **Spec**: `specs/008-seeding-predefined-templates/plan.md`
+**Input**: Section 11 of PLAN.md — 3 predefined resume templates seeded as `is_public=True`, `user_id=NULL`.
+
+## Summary
+
+Create a standalone Python seed script at `backend/supabase/seed.py` that inserts exactly 3 predefined templates (Modern Clean, Executive, Creative) with full JSONB definitions conforming to PLAN.md Section 3 format. Templates are read-only system data — users can create resumes from them but cannot modify or delete. The script is idempotent via case-insensitive upsert by name.
+
+## Technical Context
+
+**Language/Version**: Python 3.12+
+**Primary Dependencies**: SQLAlchemy async, Supabase PostgreSQL (asyncpg), Pydantic v2
+**Storage**: PostgreSQL via Supabase (templates table with JSONB `definition` and `default_styles`)
+**Testing**: pytest + pytest-asyncio with test database
+**Target Platform**: Linux server (Docker) via seed script execution
+**Project Type**: Web application (backend seed script for FastAPI + Next.js monorepo)
+**Performance Goals**: N/A — seed runs once, <1s execution
+**Constraints**: Must use existing SQLAlchemy `Template` model and repository layer. Must NOT bypass Alembic-managed schema.
+**Scale/Scope**: 3 static templates, no user data involved
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+
+### GATE 1: Architecture & Strict Layering
+✅ **PASS** — Seed script will use the existing `TemplateRepository` and `Template` model directly. Follows Route → Service → Repository pattern. No business logic in data access layer.
+
+### GATE 2: Tech Stack & Code Conventions
+✅ **PASS** — Python 3.12, SQLAlchemy async, Pydantic v2, snake_case, type hints. All conventions already established.
+
+### GATE 3: Design Patterns
+✅ **PASS** — Uses existing `BaseRepository` and `TemplateRepository`. No new patterns needed for a script that calls existing repository methods.
+
+### GATE 4: AI Agent & Content Quality
+✅ **PASS (N/A)** — This feature does not modify the AI agent.
+
+### GATE 5: Testing & Quality Gates
+✅ **PASS** — Seed script testable via pytest with test database. Can verify 3 templates inserted, idempotent on re-run.
+
+### GATE: Security & Data
+✅ **PASS** — Seeded templates have `user_id=NULL` (system-owned). Read-only enforcement via application-level check (no public API to modify `user_id IS NULL` templates). RLS policies on templates table protect against unauthorized modification.
+
+### GATE: Development Workflow
+✅ **PASS** — Single feature on single branch, conventional commits.
+
+### GATE: Governance
+✅ **PASS** — No constitution amendments needed.
+
+**Result**: ALL GATES PASS — No violations found. Complexity Tracking not required.
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/008-seeding-predefined-templates/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+```
+
+### Source Code (repository root)
+
+```text
+backend/
+├── supabase/
+│   └── seed.py                  # NEW: Seed script (this feature)
+├── app/
+│   ├── models/
+│   │   └── template.py          # EXISTING: Template model
+│   ├── repositories/
+│   │   └── template_repo.py     # EXISTING: Template repository
+│   ├── schemas/
+│   │   └── template.py          # EXISTING: Template Pydantic schemas
+│   └── api/
+│       └── v1/
+│           └── templates.py     # EXISTING: Template API routes (may need read-only guard)
+```
+
+**Structure Decision**: Single file addition (`backend/supabase/seed.py`) that imports from existing backend layers. No new directories or projects needed.
+
+## Complexity Tracking
+
+> **Not required** — Constitution Check passed with no violations.
+
+---
+
+## Feature Specification (reference)
+
+The sections below are from the clarified feature specification, referenced by the plan above.
+
+# Feature Specification: Seeding Predefined Templates
+
+**Feature Branch**: `008-seeding-predefined-templates`
+**Created**: 2026-05-11
+**Status**: Draft
+**Input**: User description: "Section 11 of PLAN.md — Seeding Predefined Templates"
+
+## User Scenarios & Testing
+
+### User Story 1 - Browse Public Templates on Dashboard (Priority: P1)
+
+A new user visits the dashboard and wants to see available resume templates before creating one.
+
+**Why this priority**: Without seeded templates the template browser is empty, making the entire onboarding flow non-functional.
+
+**Independent Test**: Can be tested by verifying the 3 seeded templates appear in `GET /api/v1/templates/` response with `is_public=True`.
+
+**Acceptance Scenarios**:
+
+1. **Given** the seed script has been executed, **When** a user calls `GET /api/v1/templates/`, **Then** the response includes exactly 3 templates with names "Modern Clean", "Executive", and "Creative"
+2. **Given** a user is not authenticated, **When** they call `GET /api/v1/templates/`, **Then** public templates are still returned (public access)
+3. **Given** the seed script has been executed, **When** querying the `templates` table, **Then** all 3 seeded templates have `is_public=True` and `user_id=NULL`
+
+---
+
+### User Story 2 - Create Resume from Seeded Template (Priority: P1)
+
+A user selects a predefined template to create their resume.
+
+**Why this priority**: This is the core user flow — pick a template, build a resume.
+
+**Independent Test**: Can be tested by calling `POST /api/v1/resumes/` with a seeded template's UUID and verifying a new resume is created with correct initial section structure.
+
+**Acceptance Scenarios**:
+
+1. **Given** "Modern Clean" template exists, **When** a user creates a resume from it, **Then** the resume has all standard sections (header, summary, experience, education, skills, projects, certifications, languages) in single-column layout with blue accent
+2. **Given** "Executive" template exists, **When** a user creates a resume from it, **Then** the resume has a dark header color scheme, serif fonts, and includes certifications in its section list
+3. **Given** "Creative" template exists, **When** a user creates a resume from it, **Then** the resume has two-column layout, colorful accents, and skills in a sidebar configuration
+
+---
+
+### User Story 3 - Seed Script Idempotency (Priority: P2)
+
+The seed operation can be run multiple times without creating duplicate templates.
+
+**Why this priority**: Migrations and seed scripts commonly run in CI/CD and must be safe to re-run.
+
+**Independent Test**: Run the seed script twice and verify the templates table still contains exactly 3 public templates.
+
+**Acceptance Scenarios**:
+
+1. **Given** the seed script has been run once, **When** it is run again, **Then** no duplicate template rows are created (upsert by name)
+2. **Given** the seed script has been run, **When** checking the database, **Then** `user_id` is `NULL` for all 3 templates
+
+### Edge Cases
+
+- What happens if the `templates` table is empty? The seed script populates it without error.
+- What happens if one of the 3 template names already exists? The seed script should upsert (update existing, insert missing).
+- How does the system handle corrupted or missing JSONB definition data? The seed script must always provide complete valid definitions.
+
+## Requirements
+
+### Functional Requirements
+
+- **FR-001**: System MUST provide a standalone Python seed script at `backend/supabase/seed.py` that inserts exactly 3 predefined templates.
+- **FR-002**: The "Modern Clean" template MUST define a single-column layout, blue accent color (`#2563eb`), Inter font, and sections: header, summary, experience, education, skills, projects, certifications, languages.
+- **FR-003**: The "Executive" template MUST define a dark header color scheme (`#1e293b` primary, `#334155` secondary), serif fonts (Merriweather headings, Georgia body), and sections: header, summary, experience, education, certifications, skills.
+- **FR-004**: The "Creative" template MUST define a two-column layout, colorful accent palette (`#7c3aed` primary, `#ec4899` accent), and sections: header, summary, experience, education, skills (sidebar), projects, certifications.
+- **FR-005**: All seeded templates MUST have `is_public=True` and `user_id=NULL`.
+- **FR-006**: The seed script MUST be idempotent (safe to run multiple times using upsert by name, with case-insensitive matching).
+- **FR-007**: Each template's `definition` MUST include valid `sections` array and `layout` object conforming to the template JSON format defined in PLAN.md Section 3.
+- **FR-008**: Each template's `default_styles` MUST include sensible defaults for margins, spacing, and section ordering.
+- **FR-009**: Seeded templates MUST be read-only system data — authenticated users MUST NOT be able to modify or delete templates where `user_id IS NULL` and `is_public = true`.
+
+### Key Entities
+
+- **Template**: A predefined resume layout with JSONB `definition` (sections + layout) and `default_styles`. Seeded as system-owned (`user_id=NULL`, `is_public=True`).
+- **Seed Script**: A standalone Python script at `backend/supabase/seed.py`.
+
+## Success Criteria
+
+### Measurable Outcomes
+
+- **SC-001**: Exactly 3 predefined templates are visible in the template browser immediately after seeding.
+- **SC-002**: Each template's definition JSON is valid against the schema (all required fields present, layout sections match the PLAN.md Section 3 format).
+- **SC-003**: Running the seed script multiple times does not create duplicate template entries.
+- **SC-004**: A new user can create a resume from any of the 3 templates without additional configuration.
+
+## Clarifications
+
+### Session 2026-05-11
+
+- Q: FR-001 — Which seed mechanism (Alembic migration vs standalone Python script vs raw SQL)? → A: Standalone Python script at `backend/supabase/seed.py`
+- Q: Can authenticated users modify or delete seeded public templates? → A: No — seeded templates are read-only system data. Users create resumes from them but cannot edit/delete the template definitions themselves.
+- Q: How should upsert match template names for idempotency? → A: Case-insensitive name matching (e.g., 'modern clean' matches 'Modern Clean').
+
+## Assumptions
+
+- The `templates` table and its schema already exist (created in Phase 1 / Section 2).
+- The seed script will be run manually or as part of initial deployment setup.
+- Template names are unique identifiers for upsert logic.
+- No file storage (e.g., thumbnail images) is needed for v1 — thumbnails can be added later.
+- The seed data is static and does not require user-specific customization.
