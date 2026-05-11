@@ -1,95 +1,104 @@
-# Implementation Plan: Chat & Studio Integration
+# Implementation Plan: [FEATURE]
 
-**Branch**: `007-implementation-phases` | **Date**: 2026-05-11 | **Spec**: specs/007-implementation-phases/spec.md
-**Input**: Feature specification from `specs/007-implementation-phases/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Bidirectional real-time content sync between the studio canvas and AI chat panel, with WebSocket as primary transport and 3s polling fallback. The chat panel is embedded as a resizable split view in the studio page. Content patches flow at section-level granularity using a `{ sectionId, fields, source, timestamp }` format.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: Python 3.12+ (backend), TypeScript strict (frontend, Next.js 15)  
-**Primary Dependencies**: FastAPI WebSocket support (backend), Zustand + TanStack Query (frontend client state), existing chat API  
-**Storage**: N/A (no new tables; uses existing resume storage via backend chat API)  
-**Testing**: pytest + pytest-asyncio + httpx AsyncClient (backend), Vitest + React Testing Library (frontend)  
-**Target Platform**: Web (Linux server via Docker Compose)  
-**Project Type**: Full-stack web application (feature extension to existing CraftCV)  
-**Performance Goals**: Canvas update ≤2s p95 (SC-001), context sync ≤1s (SC-002), auto-recover ≤10s (SC-004)  
-**Constraints**: WebSocket primary with 3s polling fallback; section-level conflict detection; degraded mode when chat API unreachable  
-**Scale/Scope**: Extends existing studio page and chat panel components; no new pages
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-### Gates
-
-| # | Rule | Status | Notes |
-|---|------|--------|-------|
-| 1 | Strict layering (frontend: Page → Component → Store/Hook → API Client) | ✅ PASS | Extends existing studio-store and chat-store; no new layering violations |
-| 2 | Tech stack adherence (no unauthorized dependencies) | ✅ PASS | Uses Zustand (existing), TanStack Query (existing), FastAPI WebSocket (built-in) |
-| 3 | Store per Domain pattern | ✅ PASS | Extends existing per-domain stores (studio-store, chat-store) |
-| 4 | Widget Registry pattern preserved | ✅ PASS | Content patches update widget state; registry unchanged |
-| 5 | Memento/Undo pattern preserved (FR-006) | ✅ PASS | Spec explicitly requires undo/redo intact |
-| 6 | Testing required (pytest + Vitest) | ✅ PASS | Sync utilities, WebSocket handlers, and UI components testable |
-
-**Result: GATE PASSED** — No violations found. Zero complexity justification needed.
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-specs/007-implementation-phases/
-├── plan.md              # This file
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
-├── contracts/           # Phase 1 output
-│   ├── api-websocket.json
-│   └── api-sync.json
-└── tasks.md             # Phase 2 output (/speckit.tasks)
+specs/[###-feature]/
+├── plan.md              # This file (/speckit.plan command output)
+├── research.md          # Phase 0 output (/speckit.plan command)
+├── data-model.md        # Phase 1 output (/speckit.plan command)
+├── quickstart.md        # Phase 1 output (/speckit.plan command)
+├── contracts/           # Phase 1 output (/speckit.plan command)
+└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-craftcv/frontend/src/
-├── components/
-│   ├── studio/
-│   │   ├── Canvas.tsx               # [EXISTING] - add sync subscription
-│   │   └── StylePanel.tsx           # [EXISTING - no changes]
-│   └── chat/
-│       ├── ChatPanel.tsx            # [EXISTING] - embed in studio layout
-│       └── ChatInput.tsx            # [EXISTING - no changes]
-├── hooks/
-│   ├── useStudio.ts                 # [EXISTING] - add WebSocket connection
-│   └── useChat.ts                   # [EXISTING] - add content patch emission
-├── stores/
-│   ├── studio-store.ts              # [EXISTING] - add sync state, patch queue
-│   └── chat-store.ts                # [EXISTING] - add content patch dispatching
-├── lib/
-│   ├── api.ts                       # [EXISTING] - add WebSocket client
-│   └── sync/
-│       ├── websocket-client.ts      # [NEW] WebSocket connection manager
-│       ├── patch-queue.ts           # [NEW] Outbound patch queue with retry
-│       ├── conflict-resolver.ts     # [NEW] Section-level conflict detection
-│       └── types.ts                 # [NEW] ContentPatch, SyncState types
-
-craftcv/backend/app/
-├── api/
-│   └── v1/
-│       ├── chat.py                  # [EXISTING] - add WebSocket endpoint
-│       └── studio.py                # [EXISTING] - add sync endpoint
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
 ├── services/
-│   └── sync_service.py              # [NEW] WebSocket connection management, patch broadcast
-├── schemas/
-│   └── sync.py                      # [NEW] ContentPatch, SyncEvent Pydantic schemas
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Feature extends existing monorepo structure (Option 2). Backend adds a new `sync_service.py` and WebSocket endpoint; frontend adds a new `lib/sync/` module.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
-*No violations — section left intentionally blank.*
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

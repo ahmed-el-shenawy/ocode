@@ -48,6 +48,11 @@ async def update_template_layout(
     template = await service.get_by_id(template_id)
     if not template:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+    if template.user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System templates cannot be modified",
+        )
     layout = {}
     if body.columns is not None:
         layout["columns"] = body.columns
@@ -85,3 +90,21 @@ async def create_template(
         is_public=body.is_public,
     )
     return template
+
+
+@router.delete("/{template_id}")
+async def delete_template(
+    template_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    service = TemplateService(db)
+    template = await service.get_by_id(template_id)
+    if not template:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
+    if template.user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="System templates cannot be deleted",
+        )
+    await service.repo.delete(template)
+    return {"status": "ok"}

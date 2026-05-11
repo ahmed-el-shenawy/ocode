@@ -27,13 +27,16 @@ class ResumeService:
 
     async def create_from_template(self, title: str, template_id: str, user_id: str) -> Resume:
         template = await self.template_repo.get_by_id(template_id)
-        template_version = None
-        if template:
-            template_version = {
-                "template_id": str(template.id),
-                "definition": template.definition,
-                "default_styles": template.default_styles,
-            }
+        if not template:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Template not found",
+            )
+        template_version = {
+            "template_id": str(template.id),
+            "definition": template.definition,
+            "default_styles": template.default_styles,
+        }
         resume = Resume(
             title=title,
             template_id=template_id,
