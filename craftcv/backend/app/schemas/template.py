@@ -1,8 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
-from typing import Any, Optional
+from typing import Any
 
-from app.core.validation import TemplateSchemaValidator
+from pydantic import BaseModel, Field
 
 
 class TemplateField(BaseModel):

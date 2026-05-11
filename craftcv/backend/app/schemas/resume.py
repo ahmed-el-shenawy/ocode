@@ -1,6 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel
 from typing import Any
+
+from pydantic import BaseModel
 
 
 class SectionItemData(BaseModel):
@@ -24,6 +25,7 @@ class ResumeUpdate(BaseModel):
     title: str | None = None
     content: Any | None = None
     styles: Any | None = None
+    updated_at: str | None = None
 
 
 class ResumeResponse(BaseModel):

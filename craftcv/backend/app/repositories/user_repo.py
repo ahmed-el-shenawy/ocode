@@ -1,5 +1,5 @@
-from app.repositories.base import BaseRepository
 from app.models.user import Profile
+from app.repositories.base import BaseRepository
 
 
 class ProfileRepository(BaseRepository[Profile]):

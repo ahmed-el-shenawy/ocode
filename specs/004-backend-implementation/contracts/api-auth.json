@@ -1,0 +1,69 @@
+# Auth API
+
+Base path: `/api/v1/auth`
+
+## POST /signup
+
+Create a new user account.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Success Response (201):**
+```json
+{
+  "user_id": "uuid",
+  "email": "user@example.com"
+}
+```
+
+**Error Responses:**
+- `400` — Email already registered, weak password, invalid email format
+- `429` — Rate limit exceeded (5 req/min per IP)
+
+---
+
+## POST /signin
+
+Authenticate with existing credentials.
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+```
+
+**Success Response (200):**
+```json
+{
+  "user_id": "uuid",
+  "email": "user@example.com",
+  "access_token": "jwt-token"
+}
+```
+
+**Error Responses:**
+- `401` — Invalid credentials
+- `429` — Rate limit exceeded (5 req/min per IP)
+
+---
+
+## POST /logout
+
+Invalidate the current session. Requires authentication.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Success Response (200):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```

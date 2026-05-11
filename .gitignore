@@ -16,3 +16,23 @@ Thumbs.db
 
 # Temp
 *.tmp
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Node.js / TypeScript
+node_modules/
+.next/
+
+# Environment
+.env
+.env.local
+.env.production

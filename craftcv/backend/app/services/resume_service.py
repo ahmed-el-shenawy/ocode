@@ -1,8 +1,10 @@
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.validation import ResumeContentValidator, ValidationResult
+from app.models.resume import Resume
 from app.repositories.resume_repo import ResumeRepository
 from app.repositories.template_repo import TemplateRepository
-from app.models.resume import Resume
-from app.core.validation import ResumeContentValidator, ValidationResult
 
 
 class ResumeService:
@@ -13,6 +15,12 @@ class ResumeService:
 
     async def get_by_id(self, resume_id: str) -> Resume | None:
         return await self.repo.get_by_id(resume_id)
+
+    async def get_by_id_and_user(self, resume_id: str, user_id: str) -> Resume | None:
+        resume = await self.repo.get_by_id(resume_id)
+        if resume and str(resume.user_id) != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+        return resume
 
     async def get_user_resumes(self, user_id: str) -> list[Resume]:
         return await self.repo.get_by_user_id(user_id)
@@ -34,12 +42,19 @@ class ResumeService:
         )
         return await self.repo.create(resume)
 
-    async def update_content(self, resume_id: str, content: dict) -> Resume | None:
+    async def update_content(
+        self, resume_id: str, content: dict, updated_at: str | None = None
+    ) -> Resume | None:
         resume = await self.repo.get_by_id(resume_id)
-        if resume:
-            resume.content = content
-            return await self.repo.update(resume)
-        return None
+        if not resume:
+            return None
+        if updated_at and str(resume.updated_at) != updated_at:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Resume has been modified. Re-fetch and retry.",
+            )
+        resume.content = content
+        return await self.repo.update(resume)
 
     async def update_styles(self, resume_id: str, styles: dict) -> Resume | None:
         resume = await self.repo.get_by_id(resume_id)
@@ -47,6 +62,14 @@ class ResumeService:
             resume.styles = styles
             return await self.repo.update(resume)
         return None
+
+    async def delete(self, resume_id: str, user_id: str) -> None:
+        resume = await self.repo.get_by_id(resume_id)
+        if not resume:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+        if str(resume.user_id) != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
+        await self.repo.delete(resume)
 
     def validate_content_against_template(self, content: dict, template_definition: dict) -> ValidationResult:
         result = self.content_validator.validate(content)
