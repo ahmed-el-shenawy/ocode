@@ -8,4 +8,5 @@ shell commands, and other important information, read the implementation plans:
 - specs/006-docker-compose-setup/plan.md (docker compose setup feature)
 - specs/007-implementation-phases/plan.md (chat & studio integration feature)
 - specs/008-seeding-predefined-templates/plan.md (seeding predefined templates feature)
+- specs/009-frontend-phase-1/plan.md (frontend phase 1 foundation & data model feature)
 <!-- SPECKIT END -->
