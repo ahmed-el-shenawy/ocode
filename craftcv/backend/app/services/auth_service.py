@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import Profile
 from app.repositories.user_repo import ProfileRepository
 from app.schemas.auth import SignInRequest, SignUpRequest
 from supabase import Client
@@ -26,8 +25,6 @@ class AuthService:
         user = auth_response.user
         if not user or not user.id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Signup failed")
-        profile = Profile(id=user.id, full_name=request.full_name)
-        await self.repo.create(profile)
         return {"user_id": str(user.id), "email": user.email}
 
     async def signin(self, request: SignInRequest) -> dict:

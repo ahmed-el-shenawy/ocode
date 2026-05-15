@@ -56,7 +56,7 @@ export function Widget({ widget, isSelected }: WidgetProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative group border-2 rounded-lg mb-4 p-4 transition-colors overflow-hidden ${
+      className={`relative group border-2 rounded-lg mb-4 p-4 transition-all duration-200 overflow-hidden ${
         isSelected
           ? "border-blue-500 bg-blue-50"
           : "border-transparent hover:border-gray-200"

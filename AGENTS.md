@@ -9,4 +9,5 @@ shell commands, and other important information, read the implementation plans:
 - specs/007-implementation-phases/plan.md (chat & studio integration feature)
 - specs/008-seeding-predefined-templates/plan.md (seeding predefined templates feature)
 - specs/009-frontend-phase-1/plan.md (frontend phase 1 foundation & data model feature)
+- specs/010-frontend-phase-2/plan.md (frontend phase 2 visual polish & micro-interactions feature)
 <!-- SPECKIT END -->
