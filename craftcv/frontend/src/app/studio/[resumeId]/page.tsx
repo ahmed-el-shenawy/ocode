@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MessageSquare, Save, Undo2, Redo2 } from "lucide-react";
+import { toast } from "sonner";
 import { Canvas } from "@/components/studio/Canvas";
 import { StylePanel } from "@/components/studio/StylePanel";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { ConnectionStatus } from "@/components/studio/ConnectionStatus";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import { useStudioStore } from "@/stores/studio-store";
 import { api } from "@/lib/api";
 import type { Resume } from "@/types/resume";
@@ -29,6 +32,7 @@ export default function StudioPage() {
   const router = useRouter();
   const resumeId = params.resumeId as string;
   const { widgets, globalStyles, setWidgets, undo, redo } = useStudioStore();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [chatOpen, setChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(380);
@@ -56,6 +60,7 @@ export default function StudioPage() {
 
   async function loadResume() {
     try {
+      setLoading(true);
       setError(null);
       const resume = await api.get<Resume>(`/resumes/${resumeId}`);
       setWidgets(buildWidgetsFromResume(resume));
@@ -66,6 +71,8 @@ export default function StudioPage() {
       } else {
         setError(message);
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -83,7 +90,9 @@ export default function StudioPage() {
         styles: globalStyles,
       });
       savedRef.current = true;
+      toast.success("Resume saved");
     } catch (err) {
+      toast.error("Failed to save resume");
       console.error("Failed to save:", err);
     } finally {
       setSaving(false);
@@ -107,6 +116,22 @@ export default function StudioPage() {
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col bg-gray-50 p-8">
+        <div className="flex items-center gap-2 mb-6">
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <div className="flex-1 mx-auto w-[816px]">
+          <Skeleton className="h-12 w-full mb-4" />
+          <Skeleton className="h-24 w-full mb-4" />
+          <Skeleton className="h-32 w-full mb-4" />
+          <Skeleton className="h-20 w-3/4" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -155,14 +180,14 @@ export default function StudioPage() {
             <MessageSquare className="w-3.5 h-3.5" />
             Assistant
           </button>
-          <button
+          <LoadingButton
             onClick={saveResume}
-            disabled={saving}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
+            loading={saving}
+            size="sm"
           >
             <Save className="w-3.5 h-3.5" />
-            {saving ? "Saving..." : "Save"}
-          </button>
+            Save
+          </LoadingButton>
         </div>
       </div>
 

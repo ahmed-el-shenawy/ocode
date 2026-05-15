@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, ArrowLeft, Check } from "lucide-react";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import type { Template } from "@/types/template";
 
 interface TemplatePreviewProps {
@@ -20,7 +21,7 @@ export function TemplatePreview({
     <div>
       <button
         onClick={onBack}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors duration-200"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to templates
@@ -52,13 +53,14 @@ export function TemplatePreview({
             </ul>
           </div>
 
-          <button
+          <LoadingButton
             onClick={onUseTemplate}
-            disabled={isCreating}
-            className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+            loading={isCreating}
+            className="mt-6"
+            size="lg"
           >
-            {isCreating ? "Creating..." : "Use This Template"}
-          </button>
+            Use This Template
+          </LoadingButton>
         </div>
       </div>
     </div>

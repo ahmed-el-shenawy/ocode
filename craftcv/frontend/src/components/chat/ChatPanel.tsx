@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { Check, MessageSquare, X } from "lucide-react";
+import { Check, MessageSquare, MessageCircle, X } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { SectionProgress } from "./SectionProgress";
 import { QuickActions } from "./QuickActions";
@@ -80,14 +80,28 @@ export function ChatPanel({ resumeId }: ChatPanelProps) {
       )}
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
-        ))}
-        {isLoading && (
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
-            Thinking...
+        {messages.length === 0 && !isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+              <MessageCircle className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-500 mb-1">Start a conversation</p>
+            <p className="text-xs text-gray-400 max-w-xs">
+              Ask the assistant to help improve your resume, add sections, or suggest better wording.
+            </p>
           </div>
+        ) : (
+          <>
+            {messages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
+            ))}
+            {isLoading && (
+              <div className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" />
+                Thinking...
+              </div>
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>

@@ -4,17 +4,45 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  function validateEmail(value: string): string | undefined {
+    if (!value.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Enter a valid email address";
+    return undefined;
+  }
+
+  function validatePassword(value: string): string | undefined {
+    if (!value.trim()) return "Password is required";
+    if (value.length < 6) return "Password must be at least 6 characters";
+    return undefined;
+  }
+
+  function handleBlurEmail() {
+    setFieldErrors((prev) => ({ ...prev, email: validateEmail(email) }));
+  }
+
+  function handleBlurPassword() {
+    setFieldErrors((prev) => ({ ...prev, password: validatePassword(password) }));
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
+    const emailErr = validateEmail(email);
+    const passwordErr = validatePassword(password);
+    if (emailErr || passwordErr) {
+      setFieldErrors({ email: emailErr, password: passwordErr });
+      return;
+    }
     setLoading(true);
     setError(null);
 
@@ -51,11 +79,15 @@ export default function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: undefined })); }}
+              onBlur={handleBlurEmail}
               required
-              className="w-full rounded border p-2 text-sm"
+              className="w-full rounded border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               placeholder="you@example.com"
             />
+            {fieldErrors.email && (
+              <p className="text-sm text-red-600 mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -65,23 +97,27 @@ export default function LoginPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: undefined })); }}
+              onBlur={handleBlurPassword}
               required
-              className="w-full rounded border p-2 text-sm"
+              className="w-full rounded border p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             />
+            {fieldErrors.password && (
+              <p className="text-sm text-red-600 mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           {error && (
             <p className="text-sm text-red-600">{error}</p>
           )}
 
-          <button
+          <LoadingButton
             type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+            loading={loading}
+            className="w-full"
           >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
+            Sign In
+          </LoadingButton>
         </form>
 
         <p className="text-sm text-gray-500 text-center mt-4">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, FileText, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -22,13 +23,17 @@ export function Sidebar() {
           <Link
             key={link.href}
             href={link.href}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+            className={cn(
+              "relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
               isActive
                 ? "bg-blue-50 text-blue-700 font-medium"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            )}
           >
-            <Icon className="w-4 h-4" />
+            {isActive && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-blue-600 rounded-r" />
+            )}
+            <Icon className="w-4 h-4 flex-shrink-0" />
             {link.label}
           </Link>
         );

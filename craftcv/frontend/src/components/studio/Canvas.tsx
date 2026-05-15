@@ -13,7 +13,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 import { Widget } from "./Widget";
 import { SectionPicker } from "./SectionPicker";
 import { useStudioStore } from "@/stores/studio-store";
@@ -137,8 +137,12 @@ export function Canvas({ resumeId }: CanvasProps) {
         </DndContext>
 
         {widgets.length === 0 && (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            Select a template or add sections to get started
+          <div className="flex flex-col items-center justify-center h-full text-center px-8">
+            <FileText className="w-12 h-12 text-gray-300 mb-3" />
+            <p className="text-sm font-medium text-gray-500 mb-1">No sections yet</p>
+            <p className="text-xs text-gray-400 max-w-xs">
+              Add sections using the + button below, or use the chat assistant to build your resume step by step.
+            </p>
           </div>
         )}
       </div>

@@ -1,9 +1,11 @@
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { NetworkBanner } from "./NetworkBanner";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="h-screen flex flex-col">
+      <NetworkBanner />
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
